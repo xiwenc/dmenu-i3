@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [[ -f $HOME/.dmenurc ]]; then
+    . $HOME/.dmenurc
+else
+    DMENU='dmenu -i'
+fi
+
+list="$(list-clients.py)"
+
+prompt="window:"
+
+spawn() {
+    recall.py "$1"
+}
+
+target=$(echo $list | sed 's/ /\n/g' | sort -u | ${DMENU} -p "$prompt")
+
+
+[[ -n $target ]] && spawn $target
