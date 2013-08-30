@@ -1,20 +1,25 @@
-#!/bin/bash
+#!/usr/bin/python
 
-if [[ -f $HOME/.dmenurc ]]; then
-    . $HOME/.dmenurc
-else
-    DMENU='dmenu -i'
-fi
+import i3
+import subprocess
 
-list="$(list-clients.py)"
+nodes = i3.filter(nodes=[])
+windows = []
+[windows.append(i['name'].replace(" ", "_").encode('ascii', 'ignore')) for i in nodes]
 
-prompt="window:"
+targets = "\n".join(sorted(windows))
 
-spawn() {
-    recall.py "$1"
-}
+dmenu = subprocess.Popen([
+    'dmenu', '-i',
+    '-p', 'window: '
+    ], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+target = dmenu.communicate(input=targets)[0]
 
-target=$(echo $list | sed 's/ /\n/g' | sort -u | ${DMENU} -p "$prompt")
+selection = 0
+for i in nodes:
+    if target == i['name'].replace(" ", "_").encode('ascii', 'ignore'):
+        selection = i['window']
+        break
 
-
-[[ -n $target ]] && spawn $target
+if selection is not 0:
+    i3.focus(id=selection)
