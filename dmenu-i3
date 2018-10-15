@@ -3,23 +3,41 @@
 import i3
 import subprocess
 
-nodes = i3.filter(nodes=[])
-windows = []
-[windows.append(i['name'].replace(" ", "_").encode('ascii', 'ignore')) for i in nodes]
 
-targets = "\n".join(sorted(windows))
+def sanitize(name):
+    return name.strip().replace(" ", "_").encode('ascii', 'ignore')
 
-dmenu = subprocess.Popen([
-    'dmenu', '-i',
-    '-p', 'window: '
-    ], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-target = dmenu.communicate(input=targets)[0]
 
-selection = 0
-for i in nodes:
-    if target == i['name'].replace(" ", "_").encode('ascii', 'ignore'):
-        selection = i['window']
-        break
+def get_dmenu_targets(nodes):
+    target_names = [sanitize(node['name']) for node in nodes]
+    dmenu_targets = "\n".join(sorted(target_names))
+    print('==> Target names')
+    print(dmenu_targets)
+    return dmenu_targets
 
-if selection is not 0:
-    i3.focus(id=selection)
+
+def get_selected_window(nodes, dmenu_targets):
+    dmenu = subprocess.Popen([
+        'dmenu', '-i',
+        '-p', 'window: '
+        ], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    selected_name = dmenu.communicate(input=dmenu_targets)[0].strip()
+    print('==> Selected target name: ', selected_name)
+
+    selected_window = None
+    for node in nodes:
+        if selected_name == sanitize(node['name']):
+            selected_window = node['window']
+            break
+    print('==> Selected window', selected_window)
+    return selected_window
+
+if __name__ == '__main__':
+    nodes = i3.filter(nodes=[])
+    dmenu_targets = get_dmenu_targets(nodes)
+    selected_window = get_selected_window(nodes, dmenu_targets)
+
+    if selected_window:
+        i3.focus(id=selected_window)
+    else:
+        print('==> No selection')
