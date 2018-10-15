@@ -19,7 +19,26 @@ git clone https://github.com/xiwenc/dmenu-i3.git
 ln -s /path/to/dmenu-i3 ~/bin/dmenu-i3
 ```
 
-Bind *dmenu-i3* to a key combination in your i3 config
+Usage
+===
+
+```shell
+dmenu-i3 --help
+usage: dmenu-i3 [-h] [--show-all] [--window-class]
+
+dmenu for active windows
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --show-all      Show all type of nodes including docks etc
+  --window-class  Render window classes
+```
+
+Bind *dmenu-i3* to a key combination in your i3 config, mine is:
+```
+bindsym $mod+Shift+d exec dmenu-i3 --window-class
+```
+
 
 Credits
 ===
