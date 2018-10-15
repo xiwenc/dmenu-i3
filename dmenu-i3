@@ -2,21 +2,35 @@
 
 import i3
 import subprocess
+import argparse
 
 
 def sanitize(name):
-    return name.strip().replace(" ", "_").encode('ascii', 'ignore')
+    return name.strip().encode('ascii', 'ignore')
 
 
-def get_dmenu_targets(nodes):
-    target_names = [sanitize(node['name']) for node in nodes]
+def get_target_name(node, window_class):
+    name = '%s' % sanitize(node['name'])
+    if window_class and 'window_properties' in node:
+        name = '[%s] %s' % (
+            sanitize(node['window_properties']['class']),
+            name
+        )
+    return name
+
+
+def get_dmenu_targets(nodes, window_class, show_all):
+    target_names = []
+    for node in nodes:
+        if 'window_properties' in node or show_all:
+            target_names.append(get_target_name(node, window_class))
     dmenu_targets = "\n".join(sorted(target_names))
     print('==> Target names')
     print(dmenu_targets)
     return dmenu_targets
 
 
-def get_selected_window(nodes, dmenu_targets):
+def get_selected_window(nodes, dmenu_targets, window_class):
     dmenu = subprocess.Popen([
         'dmenu', '-i',
         '-p', 'window: '
@@ -26,16 +40,25 @@ def get_selected_window(nodes, dmenu_targets):
 
     selected_window = None
     for node in nodes:
-        if selected_name == sanitize(node['name']):
+        if selected_name == get_target_name(node, window_class):
             selected_window = node['window']
             break
     print('==> Selected window', selected_window)
     return selected_window
 
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='dmenu for active windows')
+    parser.add_argument('--show-all', action='store_true', default=False, help='Show all type of nodes including docks etc')
+    parser.add_argument('--window-class', action='store_true', default=False, help='Render window classes')
+
+    args = parser.parse_args()
+    window_class = args.window_class
+    show_all = args.show_all
+
     nodes = i3.filter(nodes=[], focused=False)
-    dmenu_targets = get_dmenu_targets(nodes)
-    selected_window = get_selected_window(nodes, dmenu_targets)
+    dmenu_targets = get_dmenu_targets(nodes, window_class, show_all)
+    selected_window = get_selected_window(nodes, dmenu_targets, window_class)
 
     if selected_window:
         i3.focus(id=selected_window)
