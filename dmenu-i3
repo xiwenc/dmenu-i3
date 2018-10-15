@@ -33,7 +33,7 @@ def get_selected_window(nodes, dmenu_targets):
     return selected_window
 
 if __name__ == '__main__':
-    nodes = i3.filter(nodes=[])
+    nodes = i3.filter(nodes=[], focused=False)
     dmenu_targets = get_dmenu_targets(nodes)
     selected_window = get_selected_window(nodes, dmenu_targets)
 
