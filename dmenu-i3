@@ -6,51 +6,57 @@ import argparse
 
 
 def sanitize(name):
-    return name.strip().encode('ascii', 'ignore')
+    return name.strip().encode("ascii", "ignore")
 
 
 def get_target_name(node, window_class):
-    name = '%s' % sanitize(node['name'])
-    if window_class and 'window_properties' in node:
-        name = '[%s] %s' % (
-            sanitize(node['window_properties']['class']),
-            name
-        )
+    name = "%s" % sanitize(node["name"])
+    if window_class and "window_properties" in node:
+        name = "[%s] %s" % (sanitize(node["window_properties"]["class"]), name)
     return name
 
 
 def get_dmenu_targets(nodes, window_class, show_all):
     target_names = []
     for node in nodes:
-        if 'window_properties' in node or show_all:
+        if "window_properties" in node or show_all:
             target_names.append(get_target_name(node, window_class))
     dmenu_targets = "\n".join(sorted(target_names))
-    print('==> Target names')
+    print("==> Target names")
     print(dmenu_targets)
     return dmenu_targets
 
 
 def get_selected_window(nodes, dmenu_targets, window_class):
-    dmenu = subprocess.Popen([
-        'dmenu', '-i',
-        '-p', 'window: '
-        ], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    dmenu = subprocess.Popen(
+        ["dmenu", "-i", "-p", "window: "], stdin=subprocess.PIPE, stdout=subprocess.PIPE
+    )
     selected_name = dmenu.communicate(input=dmenu_targets)[0].strip()
-    print('==> Selected target name: ', selected_name)
+    print("==> Selected target name: ", selected_name)
 
     selected_window = None
     for node in nodes:
         if selected_name == get_target_name(node, window_class):
-            selected_window = node['window']
+            selected_window = node["window"]
             break
-    print('==> Selected window', selected_window)
+    print("==> Selected window", selected_window)
     return selected_window
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='dmenu for active windows')
-    parser.add_argument('--show-all', action='store_true', default=False, help='Show all type of nodes including docks etc')
-    parser.add_argument('--window-class', action='store_true', default=False, help='Render window classes')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="dmenu for active windows")
+    parser.add_argument(
+        "--show-all",
+        action="store_true",
+        default=False,
+        help="Show all type of nodes including docks etc",
+    )
+    parser.add_argument(
+        "--window-class",
+        action="store_true",
+        default=False,
+        help="Render window classes",
+    )
 
     args = parser.parse_args()
     window_class = args.window_class
@@ -63,4 +69,4 @@ if __name__ == '__main__':
     if selected_window:
         i3.focus(id=selected_window)
     else:
-        print('==> No selection')
+        print("==> No selection")
